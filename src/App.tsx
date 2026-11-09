@@ -260,6 +260,7 @@ export default function App() {
               onGoLive={handleGoLive}
               onEndLive={handleEndLive}
               onRecordingSaved={refreshStorage}
+              onNavigate={setCurrentTab}
             />
           )}
 

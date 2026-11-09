@@ -36,6 +36,9 @@ import {
   AlertCircle,
   Presentation,
   Volume2,
+  Smartphone,
+  X,
+  Sparkles,
 } from 'lucide-react';
 
 interface StudioViewProps {
@@ -53,6 +56,7 @@ interface StudioViewProps {
   onGoLive: () => void;
   onEndLive: () => void;
   onRecordingSaved: () => void;
+  onNavigate?: (tab: string) => void;
 }
 
 export const StudioView: React.FC<StudioViewProps> = ({
@@ -70,8 +74,15 @@ export const StudioView: React.FC<StudioViewProps> = ({
   onGoLive,
   onEndLive,
   onRecordingSaved,
+  onNavigate,
 }) => {
   const t = translations[language];
+
+  // Detect mobile device
+  const isMobile = typeof navigator !== 'undefined' && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (typeof window !== 'undefined' && window.innerWidth < 768)
+  );
 
   // DOM Elements
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -84,8 +95,14 @@ export const StudioView: React.FC<StudioViewProps> = ({
   const deviceManager = DeviceManager.getInstance();
   const audioEngine = AudioEngine.getInstance();
 
-  // Mode & Configuration
-  const [mode, setMode] = useState<StudioMode>('screen-camera');
+  // Mode & Configuration: On mobile smartphones, default to camera-only so user gets instant working video
+  const [mode, setMode] = useState<StudioMode>(() => {
+    if (typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      return 'camera-only';
+    }
+    return 'screen-camera';
+  });
+  const [showMobileScreenModal, setShowMobileScreenModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'camera' | 'overlays' | 'audio' | 'scenes'>('camera');
   const [activeSceneId, setActiveSceneId] = useState<string>('scene_default');
   const [transition, setTransition] = useState<SceneTransition>('cut');
@@ -263,6 +280,12 @@ export const StudioView: React.FC<StudioViewProps> = ({
   }, [deviceManager, cameraConfig.deviceId, cameraConfig.facingMode, settings.targetFps]);
 
   const startScreen = useCallback(async () => {
+    // Check if getDisplayMedia is missing or blocked on mobile browser (iOS Safari / Android Chrome)
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      setShowMobileScreenModal(true);
+      return;
+    }
+
     try {
       setStatusMessage('Select screen, window or tab to share...');
       const stream = await deviceManager.requestDisplayStream(true);
@@ -288,9 +311,13 @@ export const StudioView: React.FC<StudioViewProps> = ({
       setStatusMessage('Screen capture active');
     } catch (err: any) {
       console.warn('Display media error:', err);
-      setStatusMessage('Screen capture was cancelled or not supported.');
+      if (isMobile || err.name === 'NotSupportedError' || err.message?.toLowerCase().includes('not supported')) {
+        setShowMobileScreenModal(true);
+      } else {
+        setStatusMessage('Screen capture was cancelled or unavailable.');
+      }
     }
-  }, [deviceManager, audioEngine]);
+  }, [deviceManager, audioEngine, isMobile]);
 
   const startMicrophone = useCallback(async () => {
     try {
@@ -402,7 +429,12 @@ export const StudioView: React.FC<StudioViewProps> = ({
             {/* Mode selection buttons */}
             <div className="flex items-center gap-1.5 p-1 bg-[#13161f] rounded-lg border border-[#1f2533] overflow-x-auto max-w-full">
               <button
-                onClick={() => setMode('screen-camera')}
+                onClick={() => {
+                  if (isMobile && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
+                    setShowMobileScreenModal(true);
+                  }
+                  setMode('screen-camera');
+                }}
                 className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
                   mode === 'screen-camera'
                     ? 'bg-indigo-600 text-white shadow-xs'
@@ -413,7 +445,12 @@ export const StudioView: React.FC<StudioViewProps> = ({
                 <span>{t.modeScreenCam}</span>
               </button>
               <button
-                onClick={() => setMode('screen-only')}
+                onClick={() => {
+                  if (isMobile && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
+                    setShowMobileScreenModal(true);
+                  }
+                  setMode('screen-only');
+                }}
                 className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors ${
                   mode === 'screen-only'
                     ? 'bg-indigo-600 text-white shadow-xs'
@@ -707,6 +744,83 @@ export const StudioView: React.FC<StudioViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Mobile Screen Capture Explanation & Solution Modal */}
+      {showMobileScreenModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#131722] border border-[#232b3d] rounded-2xl p-5 shadow-2xl space-y-4 animate-slide-up">
+            <div className="flex items-center justify-between border-b border-[#1e2536] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Captura de Pantalla en Móviles</h3>
+                  <span className="text-[10px] text-slate-400 font-mono">Restricción del Navegador Móvil (iOS & Android)</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMobileScreenModal(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-[#1c2232]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-300">
+              <p className="leading-relaxed">
+                <strong className="text-white">¿Por qué parece inactivo o no captura pantalla?</strong><br />
+                Por políticas de privacidad y seguridad de <strong>Apple (Safari en iPhone)</strong> y <strong>Google (Chrome en Android)</strong>, los navegadores en celulares <strong>bloquean la captura de pantalla de otras apps</strong> para evitar que una página web espíe tu teléfono.
+              </p>
+
+              <div className="bg-[#0b0e14] p-3.5 rounded-xl border border-[#1b212f] space-y-2.5">
+                <span className="font-semibold text-indigo-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Tus 2 opciones para usar VisionCast en el móvil:</span>
+                </span>
+                
+                <div className="space-y-2 text-[11px] text-slate-300">
+                  <div className="p-2 rounded-lg bg-[#141824] border border-[#202738]">
+                    <div className="font-bold text-white mb-0.5">1. Modo Cámara y Presentador (Inmediato en tu celular):</div>
+                    <p className="text-slate-400 leading-normal">
+                      Graba video con tu cámara frontal o trasera en Full HD, captura tu voz con el micrófono, mezcla audio, agrega logos/títulos y transmite en vivo sin instalar nada.
+                    </p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-[#141824] border border-[#202738]">
+                    <div className="font-bold text-white mb-0.5">2. Compilar la App Real Nativa (APK Android / IPA iOS):</div>
+                    <p className="text-slate-400 leading-normal">
+                      Para grabar la pantalla completa de tu teléfono mientras juegas o usas WhatsApp, Android exige un Servicio en primer plano (<code className="text-indigo-400 font-mono">MediaProjection</code>) e iOS exige <code className="text-indigo-400 font-mono">ReplayKit</code>. Todo el código fuente nativo y los comandos de compilación ya están listos en la app.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-[#1e2536]">
+              <button
+                onClick={() => {
+                  setMode('camera-only');
+                  startCamera();
+                  setShowMobileScreenModal(false);
+                }}
+                className="w-full sm:flex-1 py-2.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 active:scale-95 transition-all text-center"
+              >
+                Activar Modo Cámara (Recomendado)
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowMobileScreenModal(false);
+                  onNavigate?.('help');
+                }}
+                className="w-full sm:w-auto py-2.5 px-4 rounded-lg bg-[#181d2a] hover:bg-[#202738] text-slate-300 text-xs font-semibold text-center border border-[#232b3d]"
+              >
+                Ver Código de App Nativa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

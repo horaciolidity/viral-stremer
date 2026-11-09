@@ -29,7 +29,7 @@ interface DiagnosticItem {
 
 export const NativeBuildsView: React.FC<NativeBuildsViewProps> = ({ language }) => {
   const t = translations[language];
-  const [activePlatform, setActivePlatform] = useState<'electron' | 'android' | 'ios' | 'ffmpeg'>('electron');
+  const [activePlatform, setActivePlatform] = useState<'capacitor' | 'electron' | 'android' | 'ios' | 'ffmpeg'>('capacitor');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   // Diagnostics state
@@ -273,6 +273,48 @@ class VisionCastStudioEngine: NSObject {
     }
 }`;
 
+  const capacitorGuide = `# ==============================================================================
+# VISIONCAST STUDIO — BUILD NATIVE MOBILE APP (ANDROID APK & iOS) VIA CAPACITOR
+# ==============================================================================
+# Por qué se necesita una App Nativa para Grabar Pantalla en Móviles:
+# Tanto iOS (Apple) como Android (Google) bloquean por seguridad que cualquier
+# página web en el navegador grabe la pantalla completa del teléfono mientras
+# el usuario navega en otras aplicaciones o juegos (sandbox del navegador).
+# Una app nativa en Android utiliza Foreground Service + MediaProjection,
+# lo que permite grabar WhatsApp, videojuegos, TikTok o cualquier app con tu cara.
+
+# PASO 1: Instalar Capacitor en este proyecto
+npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/camera
+
+# PASO 2: Inicializar el proyecto nativo
+npx cap init "VisionCast Studio" "com.visioncast.studio" --web-dir dist
+
+# PASO 3: Compilar los archivos web para producción
+npm run build
+
+# PASO 4: Generar el proyecto Android nativo
+npx cap add android
+npx cap sync android
+
+# PASO 5: Agregar los permisos en android/app/src/main/AndroidManifest.xml:
+# <uses-permission android:name="android.permission.RECORD_AUDIO" />
+# <uses-permission android:name="android.permission.CAMERA" />
+# <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+# <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+# <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+# PASO 6: Abrir en Android Studio y compilar tu APK firmado o depuración:
+npx cap open android
+# (En Android Studio: Menú Build > Build Bundle(s) / APK(s) > Build APK)
+
+# ==============================================================================
+# OPCIÓN iOS (iPhone / iPad - requiere macOS con Xcode):
+# ==============================================================================
+npm install @capacitor/ios
+npx cap add ios
+npx cap sync ios
+npx cap open ios`;
+
   const ffmpegCommand = `# VisionCast Studio - Professional Lossless Transcode & Streaming Command
 # 1. Hardware Accelerated NVENC (NVIDIA GPU) 60 FPS H.264
 ffmpeg -y -i input_session.webm -c:v h264_nvenc -preset p7 -b:v 8M -maxrate 10M -bufsize 16M -c:a aac -b:a 192k output_master.mp4
@@ -349,10 +391,22 @@ ffmpeg -re -i input_session.webm -c:v copy -c:a copy -f flv rtmp://a.rtmp.youtub
       )}
 
       {/* Multiplatform Architecture Selector */}
-      <div className="flex items-center gap-2 mb-4 border-b border-[#1c212c] pb-2">
+      <div className="flex items-center gap-2 mb-4 border-b border-[#1c212c] pb-2 overflow-x-auto">
+        <button
+          onClick={() => setActivePlatform('capacitor')}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+            activePlatform === 'capacitor'
+              ? 'bg-indigo-600 text-white'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+          <span>App Móvil (Capacitor / APK)</span>
+        </button>
+
         <button
           onClick={() => setActivePlatform('electron')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
             activePlatform === 'electron'
               ? 'bg-indigo-600 text-white'
               : 'text-slate-400 hover:text-slate-200'
@@ -364,31 +418,31 @@ ffmpeg -re -i input_session.webm -c:v copy -c:a copy -f flv rtmp://a.rtmp.youtub
 
         <button
           onClick={() => setActivePlatform('android')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
             activePlatform === 'android'
               ? 'bg-indigo-600 text-white'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Smartphone className="w-3.5 h-3.5" />
-          <span>Android (Kotlin)</span>
+          <span>Android (Kotlin Nativo)</span>
         </button>
 
         <button
           onClick={() => setActivePlatform('ios')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
             activePlatform === 'ios'
               ? 'bg-indigo-600 text-white'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
           <Smartphone className="w-3.5 h-3.5" />
-          <span>iOS (Swift)</span>
+          <span>iOS (Swift ReplayKit)</span>
         </button>
 
         <button
           onClick={() => setActivePlatform('ffmpeg')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
             activePlatform === 'ffmpeg'
               ? 'bg-indigo-600 text-white'
               : 'text-slate-400 hover:text-slate-200'
@@ -405,6 +459,7 @@ ffmpeg -re -i input_session.webm -c:v copy -c:a copy -f flv rtmp://a.rtmp.youtub
           <div className="flex items-center gap-2">
             <FileCode className="w-4 h-4 text-indigo-400" />
             <span className="text-xs font-mono text-slate-300">
+              {activePlatform === 'capacitor' && 'mobile/capacitor-build-guide.sh (Android APK + iOS)'}
               {activePlatform === 'electron' && 'desktop/main.js (Electron + ScreenCaptureKit)'}
               {activePlatform === 'android' && 'android/VisionCastStudioService.kt (CameraX + MediaProjection)'}
               {activePlatform === 'ios' && 'ios/VisionCastStudioEngine.swift (ReplayKit + AVFoundation)'}
@@ -415,7 +470,9 @@ ffmpeg -re -i input_session.webm -c:v copy -c:a copy -f flv rtmp://a.rtmp.youtub
           <button
             onClick={() => {
               const code =
-                activePlatform === 'electron'
+                activePlatform === 'capacitor'
+                  ? capacitorGuide
+                  : activePlatform === 'electron'
                   ? electronMainJs
                   : activePlatform === 'android'
                   ? androidKotlin
@@ -441,6 +498,7 @@ ffmpeg -re -i input_session.webm -c:v copy -c:a copy -f flv rtmp://a.rtmp.youtub
         </div>
 
         <pre className="flex-1 p-4 text-xs font-mono text-slate-300 bg-[#08090d] overflow-x-auto leading-relaxed select-text">
+          {activePlatform === 'capacitor' && capacitorGuide}
           {activePlatform === 'electron' && electronMainJs}
           {activePlatform === 'android' && androidKotlin}
           {activePlatform === 'ios' && iosSwift}
