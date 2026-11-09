@@ -21,6 +21,7 @@ import { SceneManager } from './components/SceneManager';
 import { MediaLibraryView } from './components/MediaLibraryView';
 import { SettingsView } from './components/SettingsView';
 import { NativeBuildsView } from './components/NativeBuildsView';
+import { MobileNavBar } from './components/MobileNavBar';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<string>('studio');
@@ -233,7 +234,7 @@ export default function App() {
           storageQuota={storageQuota}
         />
 
-        <main className="flex-1 flex flex-col overflow-hidden relative">
+        <main className="flex-1 flex flex-col overflow-hidden relative pb-16 md:pb-0">
           {currentTab === 'home' && (
             <HomeView
               language={language}
@@ -369,9 +370,26 @@ export default function App() {
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar (Thumb Zone) */}
+      <MobileNavBar
+        currentTab={currentTab}
+        onNavigate={setCurrentTab}
+        language={language}
+        onLanguageChange={(lang) => {
+          setLanguage(lang);
+          setSettings((prev) => ({ ...prev, language: lang }));
+        }}
+        isRecording={isRecording}
+        onStartRecord={handleStartRecording}
+        onStopRecord={handleStopRecording}
+        recordingSeconds={recordingSeconds}
+        storageQuota={storageQuota}
+        deviceCounts={deviceCounts}
+      />
+
       {/* Floating System Notification Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#141926] border border-[#232c42] text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-slide-up backdrop-blur-md">
+        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 bg-[#141926] border border-[#232c42] text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-semibold animate-slide-up backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
           <span>{toastMessage}</span>
         </div>

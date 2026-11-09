@@ -49,7 +49,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className="w-60 bg-[#0e1015] border-r border-[#1e222a] flex flex-col justify-between select-none shrink-0 z-20">
+    <aside className="hidden md:flex w-60 bg-[#0e1015] border-r border-[#1e222a] flex-col justify-between select-none shrink-0 z-20">
       {/* Navigation list */}
       <div className="p-3 space-y-1">
         <div className="px-3 py-2 text-[10px] font-semibold tracking-wider text-slate-500 uppercase">

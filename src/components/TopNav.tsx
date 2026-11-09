@@ -83,34 +83,32 @@ export const TopNav: React.FC<TopNavProps> = ({
   return (
     <header className="h-14 border-b border-[#1f242e] bg-[#0f1217] px-4 md:px-6 flex items-center justify-between gap-4 select-none z-30 shrink-0">
       {/* Zone 1: Brand title & real active indicators */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           onClick={() => onNavigate('home')}
-          className="flex items-center gap-2.5 text-left group"
+          className="flex items-center gap-2 text-left group"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform shrink-0">
             <Radio className="w-4 h-4 text-white" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight text-white group-hover:text-indigo-400 transition-colors whitespace-nowrap">
-              VISIONCAST <span className="text-indigo-400 font-semibold">STUDIO</span>
-            </span>
-          </div>
+          <span className="text-xs sm:text-sm font-bold tracking-tight text-white group-hover:text-indigo-400 transition-colors whitespace-nowrap">
+            VISIONCAST <span className="text-indigo-400 font-semibold hidden sm:inline">STUDIO</span>
+          </span>
         </button>
 
         {/* Real Live Session Badges */}
         {isRecording && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono tabular-nums">
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] sm:text-xs font-mono tabular-nums">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            <span className="font-semibold">{t.recording}</span>
+            <span className="font-semibold hidden sm:inline">{t.recording}</span>
             <span>{formatTimer(recordingSeconds)}</span>
           </div>
         )}
 
         {isStreaming && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono tabular-nums">
+          <div className="flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] sm:text-xs font-mono tabular-nums">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-semibold">{t.streaming}</span>
+            <span className="font-semibold hidden sm:inline">{t.streaming}</span>
             <span>{formatTimer(streamingSeconds)}</span>
           </div>
         )}
